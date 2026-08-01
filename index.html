@@ -1,32 +1,180 @@
-<h2 class="sr-only">Memento mori calendar showing weeks of life lived and remaining, based on birth date and life expectancy</h2>
-<div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem;">
-  <div>
-    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Birth date</label>
-    <input type="date" id="dob" style="width:160px;" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memento mori — weeks of your life</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --card: #ffffff;
+    --border: #e2e0d8;
+    --border-strong: #b8b5a8;
+    --text-primary: #1a1a18;
+    --text-secondary: #6b6a63;
+    --text-muted: #9c9a90;
+    --lived: #1a1a18;
+    --this-year: #b8b5a8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0 0 0.25rem;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 1.75rem;
+    line-height: 1.5;
+  }
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 4px;
+  }
+  input[type="date"], input[type="number"] {
+    height: 36px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 0 10px;
+    font-size: 14px;
+    background: var(--card);
+    color: var(--text-primary);
+  }
+  input[type="date"] { width: 170px; }
+  input[type="number"] { width: 90px; }
+  button {
+    height: 36px;
+    padding: 0 16px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:hover { background: #f0efe9; }
+  button:active { transform: scale(0.98); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 1.75rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .stat-label { font-size: 13px; color: var(--text-secondary); margin: 0 0 4px; }
+  .stat-value { font-size: 24px; font-weight: 500; margin: 0; }
+
+  #grid-wrap { overflow-x: auto; padding-bottom: 0.5rem; }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(52, 6px) 26px;
+    grid-auto-rows: 6px;
+    gap: 2px;
+    width: max-content;
+  }
+  .cell-empty {
+    width: 6px; height: 6px;
+    border: 0.5px solid var(--border);
+    border-radius: 1px;
+  }
+  .cell-lived {
+    width: 6px; height: 6px;
+    background: var(--lived);
+    border-radius: 1px;
+  }
+  .cell-thisyear {
+    width: 6px; height: 6px;
+    background: var(--this-year);
+    border-radius: 1px;
+  }
+  .year-label {
+    width: 26px; height: 6px;
+    font-size: 9px;
+    line-height: 6px;
+    color: var(--text-muted);
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-top: 1.25rem;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 8px; height: 8px; display: inline-block; border-radius: 1px; }
+
+  .empty-hint { grid-column: 1/-1; font-size: 13px; color: var(--text-muted); }
+
+  footer {
+    margin-top: 3rem;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Memento mori</h1>
+  <p class="subtitle">Every square is one week of your life. Filled squares are behind you.</p>
+
+  <div class="controls">
+    <div>
+      <label for="dob">Birth date</label>
+      <input type="date" id="dob">
+    </div>
+    <div>
+      <label for="life">Life expectancy (years)</label>
+      <input type="number" id="life" value="72" min="1" max="120" step="1">
+    </div>
+    <button id="go">Generate</button>
   </div>
-  <div>
-    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Life expectancy (years)</label>
-    <input type="number" id="life" value="72" min="1" max="120" step="1" style="width:80px;" />
+
+  <div class="stats" id="stats"></div>
+
+  <div id="grid-wrap">
+    <div id="grid"></div>
   </div>
-  <button id="go" style="height:36px;">Generate</button>
-</div>
 
-<div id="stats" style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:1.5rem;"></div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--lived);"></span>Lived</span>
+    <span><span class="swatch" style="background:var(--this-year);"></span>This year</span>
+    <span><span class="swatch" style="border:0.5px solid var(--border);"></span>Remaining</span>
+  </div>
 
-<div id="grid-wrap" style="overflow-x:auto;">
-  <div id="grid" style="display:grid; grid-template-columns:repeat(52, 6px); grid-auto-rows:6px; gap:2px; width:max-content;"></div>
-</div>
-
-<div style="display:flex; gap:16px; align-items:center; margin-top:1rem; font-size:12px; color:var(--text-secondary);">
-  <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px;height:8px;background:var(--text-primary);display:inline-block;"></span>Lived</span>
-  <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px;height:8px;background:var(--border-strong);display:inline-block;"></span>This year</span>
-  <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px;height:8px;border:0.5px solid var(--border);display:inline-block;"></span>Remaining</span>
+  <footer>Nothing here is stored or sent anywhere — it all runs in your browser.</footer>
 </div>
 
 <script>
-function round(n){ return Math.round(n); }
+function round(n) { return Math.round(n); }
 
-function render(){
+function render() {
   var dobVal = document.getElementById('dob').value;
   var lifeYears = parseFloat(document.getElementById('life').value) || 72;
   var grid = document.getElementById('grid');
@@ -34,44 +182,51 @@ function render(){
   grid.innerHTML = '';
   stats.innerHTML = '';
 
-  if(!dobVal){
-    stats.innerHTML = '<div style="grid-column:1/-1; font-size:13px; color:var(--text-muted);">Enter a birth date to generate the grid.</div>';
+  if (!dobVal) {
+    stats.innerHTML = '<div class="empty-hint">Enter a birth date to generate the grid.</div>';
     return;
   }
 
   var dob = new Date(dobVal + 'T00:00:00');
   var now = new Date();
-  var msPerWeek = 7*24*60*60*1000;
+  var msPerWeek = 7 * 24 * 60 * 60 * 1000;
   var weeksLived = Math.floor((now - dob) / msPerWeek);
-  var totalWeeks = round(lifeYears * 52);
-  var ageYears = (now - dob) / (365.25*24*60*60*1000);
+  var totalYears = round(lifeYears);
+  var totalWeeks = totalYears * 52;
+  var ageYears = (now - dob) / (365.25 * 24 * 60 * 60 * 1000);
   var weeksThisYear = weeksLived % 52;
-
-  var pctLived = Math.min(100, (weeksLived/totalWeeks)*100);
+  var pctLived = Math.min(100, (weeksLived / totalWeeks) * 100);
 
   var statDefs = [
-    {label:'Age', value: round(ageYears) + ' yrs'},
-    {label:'Weeks lived', value: weeksLived.toLocaleString()},
-    {label:'Weeks left', value: Math.max(0,totalWeeks-weeksLived).toLocaleString() + ' (' + round(100-pctLived) + '%)'}
+    { label: 'Age', value: round(ageYears) + ' yrs' },
+    { label: 'Weeks lived', value: weeksLived.toLocaleString() },
+    { label: 'Weeks left', value: Math.max(0, totalWeeks - weeksLived).toLocaleString() + ' (' + round(100 - pctLived) + '%)' }
   ];
-  statDefs.forEach(function(s){
+  statDefs.forEach(function (s) {
     var d = document.createElement('div');
-    d.style.cssText = 'background:var(--surface-1); border-radius:var(--radius); padding:1rem;';
-    d.innerHTML = '<p style="font-size:13px; color:var(--text-secondary); margin:0 0 4px;">'+s.label+'</p><p style="font-size:24px; font-weight:500; margin:0;">'+s.value+'</p>';
+    d.className = 'stat-card';
+    d.innerHTML = '<p class="stat-label">' + s.label + '</p><p class="stat-value">' + s.value + '</p>';
     stats.appendChild(d);
   });
 
-  for(var i=0;i<totalWeeks;i++){
-    var cell = document.createElement('div');
-    var yearIdx = Math.floor(i/52);
-    if(i < weeksLived - weeksThisYear){
-      cell.style.cssText = 'width:6px;height:6px;background:var(--text-primary);';
-    } else if(i < weeksLived){
-      cell.style.cssText = 'width:6px;height:6px;background:var(--border-strong);';
-    } else {
-      cell.style.cssText = 'width:6px;height:6px;border:0.5px solid var(--border);';
+  for (var y = 0; y < totalYears; y++) {
+    for (var w = 0; w < 52; w++) {
+      var idx = y * 52 + w;
+      var cell = document.createElement('div');
+      if (idx < weeksLived - weeksThisYear) {
+        cell.className = 'cell-lived';
+      } else if (idx < weeksLived) {
+        cell.className = 'cell-thisyear';
+      } else {
+        cell.className = 'cell-empty';
+      }
+      grid.appendChild(cell);
     }
-    grid.appendChild(cell);
+    var label = document.createElement('div');
+    var yearNum = y + 1;
+    label.className = 'year-label';
+    if (yearNum % 10 === 0) label.textContent = yearNum;
+    grid.appendChild(label);
   }
 }
 
@@ -79,3 +234,5 @@ document.getElementById('go').addEventListener('click', render);
 document.getElementById('dob').addEventListener('change', render);
 document.getElementById('life').addEventListener('change', render);
 </script>
+</body>
+</html>
