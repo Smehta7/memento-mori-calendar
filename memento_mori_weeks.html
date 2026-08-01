@@ -1,0 +1,81 @@
+<h2 class="sr-only">Memento mori calendar showing weeks of life lived and remaining, based on birth date and life expectancy</h2>
+<div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:1rem;">
+  <div>
+    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Birth date</label>
+    <input type="date" id="dob" style="width:160px;" />
+  </div>
+  <div>
+    <label style="font-size:13px; color:var(--text-secondary); display:block; margin-bottom:4px;">Life expectancy (years)</label>
+    <input type="number" id="life" value="72" min="1" max="120" step="1" style="width:80px;" />
+  </div>
+  <button id="go" style="height:36px;">Generate</button>
+</div>
+
+<div id="stats" style="display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:1.5rem;"></div>
+
+<div id="grid-wrap" style="overflow-x:auto;">
+  <div id="grid" style="display:grid; grid-template-columns:repeat(52, 6px); grid-auto-rows:6px; gap:2px; width:max-content;"></div>
+</div>
+
+<div style="display:flex; gap:16px; align-items:center; margin-top:1rem; font-size:12px; color:var(--text-secondary);">
+  <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px;height:8px;background:var(--text-primary);display:inline-block;"></span>Lived</span>
+  <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px;height:8px;background:var(--border-strong);display:inline-block;"></span>This year</span>
+  <span style="display:flex; align-items:center; gap:4px;"><span style="width:8px;height:8px;border:0.5px solid var(--border);display:inline-block;"></span>Remaining</span>
+</div>
+
+<script>
+function round(n){ return Math.round(n); }
+
+function render(){
+  var dobVal = document.getElementById('dob').value;
+  var lifeYears = parseFloat(document.getElementById('life').value) || 72;
+  var grid = document.getElementById('grid');
+  var stats = document.getElementById('stats');
+  grid.innerHTML = '';
+  stats.innerHTML = '';
+
+  if(!dobVal){
+    stats.innerHTML = '<div style="grid-column:1/-1; font-size:13px; color:var(--text-muted);">Enter a birth date to generate the grid.</div>';
+    return;
+  }
+
+  var dob = new Date(dobVal + 'T00:00:00');
+  var now = new Date();
+  var msPerWeek = 7*24*60*60*1000;
+  var weeksLived = Math.floor((now - dob) / msPerWeek);
+  var totalWeeks = round(lifeYears * 52);
+  var ageYears = (now - dob) / (365.25*24*60*60*1000);
+  var weeksThisYear = weeksLived % 52;
+
+  var pctLived = Math.min(100, (weeksLived/totalWeeks)*100);
+
+  var statDefs = [
+    {label:'Age', value: round(ageYears) + ' yrs'},
+    {label:'Weeks lived', value: weeksLived.toLocaleString()},
+    {label:'Weeks left', value: Math.max(0,totalWeeks-weeksLived).toLocaleString() + ' (' + round(100-pctLived) + '%)'}
+  ];
+  statDefs.forEach(function(s){
+    var d = document.createElement('div');
+    d.style.cssText = 'background:var(--surface-1); border-radius:var(--radius); padding:1rem;';
+    d.innerHTML = '<p style="font-size:13px; color:var(--text-secondary); margin:0 0 4px;">'+s.label+'</p><p style="font-size:24px; font-weight:500; margin:0;">'+s.value+'</p>';
+    stats.appendChild(d);
+  });
+
+  for(var i=0;i<totalWeeks;i++){
+    var cell = document.createElement('div');
+    var yearIdx = Math.floor(i/52);
+    if(i < weeksLived - weeksThisYear){
+      cell.style.cssText = 'width:6px;height:6px;background:var(--text-primary);';
+    } else if(i < weeksLived){
+      cell.style.cssText = 'width:6px;height:6px;background:var(--border-strong);';
+    } else {
+      cell.style.cssText = 'width:6px;height:6px;border:0.5px solid var(--border);';
+    }
+    grid.appendChild(cell);
+  }
+}
+
+document.getElementById('go').addEventListener('click', render);
+document.getElementById('dob').addEventListener('change', render);
+document.getElementById('life').addEventListener('change', render);
+</script>
